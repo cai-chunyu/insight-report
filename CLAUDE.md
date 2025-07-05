@@ -83,8 +83,35 @@ bun run format # Biome 格式化代码
 
 1. **代码风格**: 使用 Biome 进行格式化，配置为空格缩进、双引号
 2. **类型安全**: TypeScript 严格模式已启用，确保所有代码类型正确
-3. **客户端组件**: 首页使用 'use client' 标记为客户端组件以支持交互
-4. **文章渲染**: 使用 `dangerouslySetInnerHTML` 渲染 HTML 文章内容
+3. **服务端渲染**: 首页已改为服务端渲染，支持 SEO
+4. **文章渲染**: 使用 Route Handler 直接返回 HTML，并注入 SEO 标签
+
+## SEO 优化
+
+项目已完成全面的 SEO 优化：
+
+1. **技术 SEO**
+   - 服务端渲染首页，确保搜索引擎可以抓取内容
+   - 动态生成 sitemap.xml
+   - 配置 robots.txt
+   - 动态设置 `<html lang>` 标签
+   - 添加结构化数据 (Schema.org)
+
+2. **元数据管理**
+   - 完整的 Open Graph 标签
+   - Twitter Card 支持
+   - 多语言 hreflang 标签
+   - canonical URL 设置
+
+3. **资源文件**
+   - 动态生成的 favicon 和图标
+   - Open Graph 图片
+   - PWA manifest.json
+
+4. **性能优化**
+   - 设置缓存头
+   - 启用压缩
+   - 安全头部配置
 
 ## 部署
 

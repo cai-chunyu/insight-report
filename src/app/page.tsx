@@ -1,7 +1,6 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import LanguageSelector from './components/LanguageSelector';
+import { cookies } from 'next/headers';
 
 type Article = {
   id: string;
@@ -41,50 +40,58 @@ const articlesData = {
   ]
 };
 
-export default function Home() {
-  const [language, setLanguage] = useState<'en' | 'zh'>('en');
-  const [articles, setArticles] = useState<Article[]>([]);
+async function getPreferredLanguage(): Promise<'en' | 'zh'> {
+  const cookieStore = await cookies();
+  const languageCookie = cookieStore.get('language');
+  
+  if (languageCookie?.value === 'zh' || languageCookie?.value === 'en') {
+    return languageCookie.value as 'en' | 'zh';
+  }
+  
+  // 默认语言
+  return 'en';
+}
 
-  useEffect(() => {
-    // Check if there's a saved language preference
-    const savedLang = localStorage.getItem('language') as 'en' | 'zh';
-    if (savedLang) {
-      setLanguage(savedLang);
+export default async function Home() {
+  const language = await getPreferredLanguage();
+  const articles = articlesData[language];
+
+  // 结构化数据
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'InsightReport',
+    url: 'https://insightreport.org',
+    description: language === 'zh' 
+      ? '一个现代化的双语资讯平台，提供高质量的中英文内容和洞察。'
+      : 'A modern bilingual information platform delivering high-quality content and insights in English and Chinese.',
+    inLanguage: language,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://insightreport.org/search?q={search_term_string}'
+      },
+      'query-input': 'required name=search_term_string'
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'InsightReport',
+      url: 'https://insightreport.org'
     }
-  }, []);
-
-  useEffect(() => {
-    setArticles(articlesData[language]);
-    localStorage.setItem('language', language);
-  }, [language]);
+  };
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <div className="min-h-screen bg-white">
       <header className="border-b">
         <div className="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center">
           <h1 className="text-2xl font-semibold">InsightReport</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-3 py-1 rounded ${
-                language === 'en'
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLanguage('zh')}
-              className={`px-3 py-1 rounded ${
-                language === 'zh'
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-              }`}
-            >
-              中文
-            </button>
-          </div>
+          <LanguageSelector defaultLanguage={language} />
         </div>
       </header>
 
@@ -99,7 +106,7 @@ export default function Home() {
                 <h2 className="text-xl font-medium text-zinc-900 mb-2">
                   {article.title}
                 </h2>
-                <time className="text-sm text-zinc-500">
+                <time className="text-sm text-zinc-500" dateTime={article.date}>
                   {article.date}
                 </time>
               </Link>
@@ -108,5 +115,6 @@ export default function Home() {
         </div>
       </main>
     </div>
+    </>
   );
 }
