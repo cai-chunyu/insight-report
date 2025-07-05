@@ -51,8 +51,7 @@ const nextConfig = {
   
   // 实验性功能
   experimental: {
-    // 优化字体加载
-    optimizeFonts: true,
+    // Next.js 15 已经默认优化字体，不需要额外配置
   }
 };
 
