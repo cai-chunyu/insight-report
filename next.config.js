@@ -45,12 +45,7 @@ const nextConfig = {
   // 重定向配置（如果需要）
   async redirects() {
     return [
-      // 示例：将旧的 URL 重定向到新的 URL
-      // {
-      //   source: '/old-path',
-      //   destination: '/new-path',
-      //   permanent: true,
-      // },
+      // 新项目暂时不需要重定向
     ];
   },
   

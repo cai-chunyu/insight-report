@@ -12,10 +12,10 @@ type Article = {
 const articlesData = {
   en: [
     {
-      id: '20250705-1',
+      id: 'short-drama-market-analysis',
       title: 'Global Short-form Drama Market Interactive Dashboard',
       date: '2025-01-05',
-      path: '/articles/en/20250705-1'
+      path: '/articles/en/short-drama-market-analysis'
     },
     {
       id: 'about',
@@ -26,10 +26,10 @@ const articlesData = {
   ],
   zh: [
     {
-      id: '20250705-1',
+      id: 'short-drama-market-analysis',
       title: '全球短剧市场交互式分析仪表盘',
       date: '2025-01-05',
-      path: '/articles/zh/20250705-1'
+      path: '/articles/zh/short-drama-market-analysis'
     },
     {
       id: 'about',
