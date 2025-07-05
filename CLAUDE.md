@@ -92,6 +92,9 @@ bun run format # Biome 格式化代码
      - 3-5 个单词
      - 包含核心关键词
   4. 更新 `page.tsx` 中的 `articlesData`
+  5. 在增加的页面中添加“回到首页”链接，链接指向首页
+  6. 在页面的下方添加往期文章的链接，取最新的3篇文章
+  7. 对页面做SEO优化
 
 ## 开发注意事项
 
@@ -100,32 +103,6 @@ bun run format # Biome 格式化代码
 3. **服务端渲染**: 首页已改为服务端渲染，支持 SEO
 4. **文章渲染**: 使用 Route Handler 直接返回 HTML，并注入 SEO 标签
 
-## SEO 优化
-
-项目已完成全面的 SEO 优化：
-
-1. **技术 SEO**
-   - 服务端渲染首页，确保搜索引擎可以抓取内容
-   - 动态生成 sitemap.xml
-   - 配置 robots.txt
-   - 动态设置 `<html lang>` 标签
-   - 添加结构化数据 (Schema.org)
-
-2. **元数据管理**
-   - 完整的 Open Graph 标签
-   - Twitter Card 支持
-   - 多语言 hreflang 标签
-   - canonical URL 设置
-
-3. **资源文件**
-   - 动态生成的 favicon 和图标
-   - Open Graph 图片
-   - PWA manifest.json
-
-4. **性能优化**
-   - 设置缓存头
-   - 启用压缩
-   - 安全头部配置
 
 ## 部署
 
