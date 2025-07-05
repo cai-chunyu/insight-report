@@ -90,7 +90,10 @@ export default async function Home() {
       <div className="min-h-screen bg-white">
       <header className="border-b">
         <div className="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">InsightReport</h1>
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="InsightReport Logo" className="w-10 h-10" />
+            <h1 className="text-2xl font-semibold">InsightReport</h1>
+          </div>
           <LanguageSelector defaultLanguage={language} />
         </div>
       </header>

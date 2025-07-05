@@ -27,21 +27,44 @@ export default async function OGImage() {
           padding: '48px',
         }}
       >
+        {/* Logo */}
+        <div style={{ marginBottom: 40 }}>
+          <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="80" cy="80" r="75" fill="white" opacity="0.95" />
+            
+            <g transform="translate(80, 70)">
+              <path d="M-35 0 C-35 -19.3 -19.3 -35 0 -35 C19.3 -35 35 -19.3 35 0 C35 19.3 19.3 35 0 35 C-19.3 35 -35 19.3 -35 0" 
+                    fill="none" 
+                    stroke="#667eea" 
+                    strokeWidth="5"/>
+              
+              <circle cx="0" cy="0" r="18" fill="#667eea" />
+              <circle cx="0" cy="0" r="11" fill="white" />
+              <circle cx="0" cy="0" r="7" fill="#4a5568" />
+              <circle cx="4" cy="-4" r="3" fill="white" opacity="0.9" />
+            </g>
+            
+            <rect x="50" y="110" width="60" height="4" rx="2" fill="#718096" opacity="0.8" />
+            <rect x="45" y="120" width="70" height="4" rx="2" fill="#718096" opacity="0.6" />
+            <rect x="55" y="130" width="50" height="4" rx="2" fill="#718096" opacity="0.4" />
+          </svg>
+        </div>
+        
         <div
           style={{
-            fontSize: 120,
+            fontSize: 90,
             fontWeight: 'bold',
             color: 'white',
-            marginBottom: 24,
-            letterSpacing: '-0.05em',
+            marginBottom: 20,
+            letterSpacing: '-0.02em',
           }}
         >
           InsightReport
         </div>
         <div
           style={{
-            fontSize: 36,
-            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: 32,
+            color: 'rgba(255, 255, 255, 0.95)',
             textAlign: 'center',
             maxWidth: 800,
             lineHeight: 1.4,
@@ -51,9 +74,9 @@ export default async function OGImage() {
         </div>
         <div
           style={{
-            fontSize: 24,
-            color: 'rgba(255, 255, 255, 0.7)',
-            marginTop: 48,
+            fontSize: 22,
+            color: 'rgba(255, 255, 255, 0.8)',
+            marginTop: 40,
           }}
         >
           insightreport.org
