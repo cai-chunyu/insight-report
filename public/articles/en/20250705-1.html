@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Short-form Drama Market Interactive Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Subtle Accents -->
+    <!-- Application Structure Plan: I designed a top-down, narrative dashboard structure instead of mirroring the report's linear chapters. Users first get a high-level view via a compelling "Market Overview" (key metrics, growth chart). Next, "Global Landscape" allows deep exploration of regional differences. "Business Uncovered" then visually deconstructs the value chain and ROI model, simplifying complex business logic. "Case Studies" provide concrete lessons through comparison. Finally, "AI & The Future" looks ahead with a roadmap and includes a hands-on, Gemini API-powered script generator. This macro-to-micro-to-future structure aligns with natural cognitive flow, enhancing information consumption and usability. -->
+    <!-- Visualization & Content Choices: 
+        - Market Size: (Goal: Show trends) -> Interactive Line Chart (Chart.js). Reason: Intuitively shows explosive growth and forecasts; hover interaction for specific data points.
+        - Cost Structure: (Goal: Reveal proportions) -> Doughnut Chart (Chart.js). Reason: Clearly illustrates the overwhelming share of "Traffic Acquisition" costs, a core insight of the business model.
+        - Value Chain: (Goal: Organize process) -> HTML/CSS Flexbox Diagram. Reason: A lightweight, responsive flowchart using HTML and Unicode icons (no SVG/images) to show the end-to-end process from IP to monetization.
+        - Regional Comparison: (Goal: Comparative analysis) -> Interactive Cards + Tabs (HTML/CSS/JS). Reason: Users click to switch between regional profiles, making exploration more engaging than a static table.
+        - Case Studies: (Goal: Compare & organize) -> Grid Layout Cards (HTML/CSS). Reason: Juxtaposes four cases for easy side-by-side comparison of success factors and failures.
+        - AI Strategy: (Goal: Show steps) -> Timeline/Steps Component (HTML/CSS). Reason: Visually presents the GTM strategy for an AI platform in logical, easy-to-digest phases.
+        - AI Script Generation: (Goal: Demonstrate AI capability) -> Gemini API Interactive Module. Reason: Directly showcases AI's ability to generate script outlines, turning a future vision from the report into a tangible, persuasive experience.
+        - Library/Method: Chart.js (Canvas), Tailwind CSS, Vanilla JS, Gemini API. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfcfb;
+            color: #3f3c3a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #fbeee4;
+            color: #c55a11;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .tab-btn.active {
+            background-color: #c55a11;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .tab-btn {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #c55a11;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-50 shadow-md bg-white/80 backdrop-blur-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Short-form Drama Insights</h1>
+                </div>
+                <div class="hidden md:flex md:items-center md:space-x-2 lg:space-x-4">
+                    <a href="#overview" class="nav-link">Market Overview</a>
+                    <a href="#global" class="nav-link">Global Landscape</a>
+                    <a href="#business" class="nav-link">Business Uncovered</a>
+                    <a href="#cases" class="nav-link">Case Studies</a>
+                    <a href="#future" class="nav-link">AI & The Future</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Section 1: Market Overview -->
+        <section id="overview" class="mb-16 md:mb-24 text-center scroll-mt-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">A New Paradigm Risen Overnight</h2>
+            <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600 mb-10">
+                This section provides a macro view of the short-form drama market. Through key metrics and growth trends, it intuitively showcases the astonishing explosive power of this emerging field, starting with the evolution of the Chinese market.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-amber-600">¥37.39B</h3>
+                    <p class="mt-2 text-gray-500">2023 China Market Size</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-amber-600">267.7%</h3>
+                    <p class="mt-2 text-gray-500">2023 Y-o-Y Growth</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-amber-600">> Box Office</h3>
+                    <p class="mt-2 text-gray-500">Market size surpassed movies in 2023</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-xl">
+                 <h3 class="text-xl font-semibold mb-4 text-left">China's Micro-Drama Market Size & Forecast (2021-2027E)</h3>
+                <div class="chart-container">
+                    <canvas id="marketSizeChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Global Landscape -->
+        <section id="global" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">The Global Journey: A Differentiated Arena</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    The global market is not monolithic. This section uses interactive cards to clearly compare the core differences in users, content, and monetization models across major strategic regions. Click the buttons below to explore each unique ecosystem.
+                </p>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-xl">
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200 active" data-region="na">North America</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200" data-region="sea">Southeast Asia</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200" data-region="jpkr">Japan & Korea</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200" data-region="other">Emerging Markets</button>
+                </div>
+                <div id="region-content" class="fade-in">
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Business Uncovered -->
+        <section id="business" class="mb-16 md:mb-24 scroll-mt-20">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Business Uncovered: A Game of Traffic Acquisition</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    Short-form drama is essentially performance marketing. This section deconstructs its unique value chain and cost structure. Through diagrams, you'll understand why "traffic acquisition" is the core of this business and how profit margins are squeezed.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-xl">
+                     <h3 class="text-xl font-semibold mb-6 text-center">Short-form Drama Value Chain</h3>
+                     <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-orange-100 text-orange-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">💡</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">IP Sourcing</h4>
+                                <p class="text-sm text-gray-600">Adapting proven web novels to reduce content risk</p>
+                            </div>
+                        </div>
+                        <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                        <div class="flex items-center">
+                           <div class="flex-shrink-0 bg-sky-100 text-sky-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">🎬</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">Production</h4>
+                                <p class="text-sm text-gray-600">Completed within 3 months, focusing on speed</p>
+                            </div>
+                        </div>
+                        <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                        <div class="flex items-center">
+                             <div class="flex-shrink-0 bg-red-100 text-red-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">🚀</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-red-700">Traffic Acquisition (Core)</h4>
+                                <p class="text-sm text-gray-600">Performance ad campaigns that determine success or failure</p>
+                            </div>
+                        </div>
+                         <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                        <div class="flex items-center">
+                           <div class="flex-shrink-0 bg-indigo-100 text-indigo-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">📱</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">Platform</h4>
+                                <p class="text-sm text-gray-600">Mini Programs (China) / Standalone Apps (Global)</p>
+                            </div>
+                        </div>
+                         <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                         <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 text-green-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">💰</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">Monetization</h4>
+                                <p class="text-sm text-gray-600">Pay-to-unlock (IAP) / Ad-supported (IAA) / Brand integration</p>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-xl flex flex-col justify-center">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Typical Short-form Drama Cost Structure</h3>
+                    <div class="chart-container w-full max-w-sm mx-auto h-64 md:h-80">
+                         <canvas id="costStructureChart"></canvas>
+                    </div>
+                     <p class="text-center text-sm text-gray-500 mt-4">Traffic acquisition accounts for 80-90% of costs, pinpointing the industry's core pain point and the most valuable entry point for AI technology.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Case Studies -->
+        <section id="cases" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Case Studies: Blueprints for Success and Failure</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    By dissecting landmark cases, this section reveals the underlying logic driving success and the strategic misjudgments leading to failure. This will help you understand the impact of different strategic choices in various market environments.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Case 1: ReelShort -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">ReelShort (Global)</h4>
+                    <p class="text-sm text-green-600 font-semibold mb-3">✅ Victory of the Impulse-Buy Model</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                        <li><span class="font-bold text-green-700">Content Engine:</span> Replicates proven web novel hits like werewolves, billionaires.</li>
+                        <li><span class="font-bold text-green-700">Marketing Engine:</span> "Product is the ad," using juicy clips to drive traffic.</li>
+                        <li><span class="font-bold text-green-700">Monetization Engine:</span> Pay-per-episode microtransactions lower the payment barrier.</li>
+                    </ul>
+                </div>
+                <!-- Case 2: Quibi -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">Quibi (Global)</h4>
+                    <p class="text-sm text-red-600 font-semibold mb-3">❌ The Perfect Counterexample of Strategic Mismatch</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                       <li><span class="font-bold text-red-700">Content Mismatch:</span> Offered "premium" content requiring focus, not instant gratification.</li>
+                       <li><span class="font-bold text-red-700">Pricing Mismatch:</span> High-friction subscription model couldn't compete with free content.</li>
+                       <li><span class="font-bold text-red-700">Context Mismatch:</span> Its core "on-the-go" use case vanished during the pandemic.</li>
+                    </ul>
+                </div>
+                <!-- Case 3: Stepmom in the 80s -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">I'm a Stepmom in the 80s</h4>
+                    <p class="text-sm text-green-600 font-semibold mb-3">✅ A Masterpiece of 'Traffic is King'</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                        <li><span class="font-bold text-green-700">Precise Tropes:</span> Captured resonant elements like "nostalgia" and "comeback stories".</li>
+                        <li><span class="font-bold text-green-700">Capital Driven:</span> Massive ad spend for saturation bombing to achieve positive ROI.</li>
+                        <li><span class="font-bold text-green-700">Model Validation:</span> Proved traffic acquisition ability is the #1 factor for a hit in China.</li>
+                    </ul>
+                </div>
+                <!-- Case 4: Oops! -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">Oops! Surrounded by Beauties</h4>
+                    <p class="text-sm text-blue-600 font-semibold mb-3">💡 Innovator of Interactive Gameplay</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                         <li><span class="font-bold text-blue-700">Model Innovation:</span> "Drama + Game," a live-action interactive experience.</li>
+                         <li><span class="font-bold text-blue-700">Channel Breakthrough:</span> Bypassed the ad-spend war by selling on the Steam platform.</li>
+                         <li><span class="font-bold text-blue-700">Value Boost:</span> Deep engagement increased per-user value, supporting a new model.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: AI & Future -->
+        <section id="future" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">The AI Revolution: Reshaping the Future of Content</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    Based on a deep market understanding, we see a future where AI is an indispensable core tool. This section presents a strategic roadmap for an AI-powered creation platform and offers a Gemini-driven interactive experience for you to feel the magic of AI script generation.
+                </p>
+            </div>
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl mb-8">
+                <h3 class="text-xl font-semibold mb-6 text-center">Strategic Roadmap for an AI-Powered Platform</h3>
+                <div class="relative border-l-2 border-dashed border-orange-300 ml-4 md:ml-0 md:border-l-0 md:border-t-2 md:flex">
+                    <!-- Phase 1 -->
+                    <div class="mb-8 md:mb-0 md:w-1/3 relative flex md:block">
+                        <div class="absolute -left-5 md:left-auto md:-top-5 md:right-1/2 md:translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                        <div class="pl-8 md:pl-0 md:pt-10 md:px-4 text-center">
+                            <h4 class="font-bold text-lg mb-2">Phase 1: AI Script Generation</h4>
+                             <p class="text-sm text-gray-600">Positioned as an "ROI Optimization Engine" to generate high-conversion scripts for specific markets by deconstructing hits, tackling the ad-spend black hole at the source.</p>
+                        </div>
+                    </div>
+                     <!-- Phase 2 -->
+                    <div class="mb-8 md:mb-0 md:w-1/3 relative flex md:block">
+                         <div class="absolute -left-5 md:left-auto md:-top-5 md:right-1/2 md:translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                        <div class="pl-8 md:pl-0 md:pt-10 md:px-4 text-center">
+                            <h4 class="font-bold text-lg mb-2">Phase 2: Hybrid Production</h4>
+                             <p class="text-sm text-gray-600">Launch AI assistant tools (storyboards, virtual sets) and seamlessly integrate AI content into live-action workflows, reducing production costs without hitting technical bottlenecks.</p>
+                        </div>
+                    </div>
+                     <!-- Phase 3 -->
+                    <div class="md:w-1/3 relative flex md:block">
+                         <div class="absolute -left-5 md:left-auto md:-top-5 md:right-1/2 md:translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                        <div class="pl-8 md:pl-0 md:pt-10 md:px-4 text-center">
+                            <h4 class="font-bold text-lg mb-2">Phase 3: End-to-End AI Production</h4>
+                             <p class="text-sm text-gray-600">Once underlying models solve the "consistency" problem, integrate a full "script-to-screen" automated solution to achieve a true industrial revolution.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gemini API Feature -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+                <h3 class="text-xl font-semibold mb-2 text-center">✨ AI Script Outline Generator</h3>
+                <p class="text-center text-sm text-gray-500 mb-6">Powered by Google Gemini</p>
+                <div class="max-w-2xl mx-auto">
+                    <div class="mb-4">
+                        <label for="prompt-input" class="block text-sm font-medium text-gray-700 mb-1">Enter your idea (e.g., a programmer travels back in time to become a martial arts hero)</label>
+                        <input type="text" id="prompt-input" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="A sci-fi story about time and betrayal...">
+                    </div>
+                    <button id="generate-btn" class="w-full bg-orange-600 text-white font-bold py-2 px-4 rounded-md hover:bg-orange-700 transition duration-300 flex items-center justify-center">
+                        Generate Script Outline
+                    </button>
+                    <div id="loading-indicator" class="hidden mt-6 flex justify-center">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="result-container" class="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200 whitespace-pre-wrap font-mono text-sm hidden"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-16 bg-gray-800 text-white text-center py-4">
+        <p class="text-sm">&copy; 2025 Global Short-form Drama Market Interactive Analysis. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const marketData = {
+                labels: ['2021', '2022', '2023', '2024E', '2025E', '2027E'],
+                data: [3.98, 27.75, 373.9, 505, 634.3, 928] // Simplified average for 2027
+            };
+
+            const costData = {
+                labels: ['Traffic Acquisition (85%)', 'Production Cost (10%)', 'Script Cost (3%)', 'Platform & Others (2%)'],
+                data: [85, 10, 3, 2]
+            };
+            
+            const regionData = {
+                na: {
+                    title: 'North America: The High-ARPU Profit Core',
+                    details: [
+                        { label: 'Market Position', value: 'The undisputed revenue king, contributing 60-70% of total overseas revenue.' },
+                        { label: 'User Profile', value: 'Primarily 35+ women, with higher education and disposable income.' },
+                        { label: 'Popular Genres', value: 'Werewolf, vampire, secret billionaire, contract marriage.' },
+                        { label: 'Monetization Model', value: 'Mainly IAP (In-App Purchase), with strong user willingness to pay.' }
+                    ]
+                },
+                sea: {
+                    title: 'Southeast Asia: The High-Volume Growth Frontier',
+                    details: [
+                        { label: 'Market Position', value: 'The main engine for user growth, with massive download numbers.' },
+                        { label: 'User Profile', value: 'Younger, mobile-first users with strong cultural affinity.' },
+                        { label: 'Popular Genres', value: 'Urban romance, family disputes, comeback stories, and other localized content.' },
+                        { label: 'Monetization Model', value: 'Hybrid IAA+IAP model to suit a price-sensitive market.' }
+                    ]
+                },
+                jpkr: {
+                    title: 'Japan & Korea: The Quality-Focused Potential Market',
+                    details: [
+                        { label: 'Market Position', value: 'A fast-growing potential market, contributing nearly 20% of revenue for some apps.' },
+                        { label: 'User Profile', value: 'High standards for content quality and aesthetic production.' },
+                        { label: 'Popular Genres', value: 'High-quality, polished productions tailored to local tastes.' },
+                        { label: 'Monetization Model', value: 'Primarily IAP, as high-quality content can support paid models.' }
+                    ]
+                },
+                other: {
+                    title: 'LATAM & Middle East: The Next Wave of Opportunity',
+                    details: [
+                        { label: 'Market Position', value: 'Widely seen as the next blue ocean, with outstanding download growth.' },
+                        { label: 'User Profile', value: 'Diverse, requiring deep local insights.' },
+                        { label: 'Popular Genres', value: 'Unique local preferences, such as gang and war themes in Brazil.' },
+                        { label: 'Monetization Model', value: 'Hybrid IAA+IAP model, currently in an exploratory phase.' }
+                    ]
+                }
+            };
+            
+            // Chart.js: Market Size Chart
+            const ctxMarket = document.getElementById('marketSizeChart').getContext('2d');
+            new Chart(ctxMarket, {
+                type: 'line',
+                data: {
+                    labels: marketData.labels,
+                    datasets: [{
+                        label: 'Market Size (¥100M)',
+                        data: marketData.data,
+                        borderColor: '#c55a11',
+                        backgroundColor: 'rgba(197, 90, 17, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#c55a11',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#c55a11',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Size (¥100 Million RMB)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ¥${context.parsed.y}B`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart.js: Cost Structure Chart
+            const ctxCost = document.getElementById('costStructureChart').getContext('2d');
+            new Chart(ctxCost, {
+                type: 'doughnut',
+                data: {
+                    labels: costData.labels,
+                    datasets: [{
+                        label: 'Cost Breakdown',
+                        data: costData.data,
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Region tabs functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const regionContentDiv = document.getElementById('region-content');
+
+            function updateRegionContent(region) {
+                const data = regionData[region];
+                let contentHTML = `
+                    <div class="p-4 md:p-6 bg-amber-50 rounded-lg">
+                        <h3 class="font-bold text-xl mb-4 text-gray-800">${data.title}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                `;
+                data.details.forEach(item => {
+                    contentHTML += `
+                        <div class="bg-white/50 p-4 rounded-md">
+                            <p class="font-semibold text-amber-700">${item.label}</p>
+                            <p class="text-sm text-gray-600">${item.value}</p>
+                        </div>
+                    `;
+                });
+                contentHTML += '</div></div>';
+                regionContentDiv.innerHTML = contentHTML;
+                regionContentDiv.classList.remove('fade-in');
+                void regionContentDiv.offsetWidth;
+                regionContentDiv.classList.add('fade-in');
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateRegionContent(button.dataset.region);
+                });
+            });
+
+            // Smooth scrolling for nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Active nav link on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            // Gemini API functionality
+            const generateBtn = document.getElementById('generate-btn');
+            const promptInput = document.getElementById('prompt-input');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const resultContainer = document.getElementById('result-container');
+
+            async function generateScript() {
+                const userPrompt = promptInput.value;
+                if (!userPrompt) {
+                    resultContainer.textContent = 'Please enter your creative idea or theme.';
+                    resultContainer.classList.remove('hidden');
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                resultContainer.classList.add('hidden');
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Generating...';
+
+                const fullPrompt = `Based on the following theme, generate a structured script outline for a 3-minute vertical short-form drama. The outline must include:\n1. Title\n2. Logline (one-sentence summary)\n3. Main Character Descriptions (2-3)\n4. Setting\n5. Key Plot Points (Beginning, Rising Action, Climax, Resolution)\n6. Core Twist or Climax\n\nTheme: ${userPrompt}`;
+
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: fullPrompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        resultContainer.textContent = text;
+                    } else {
+                        throw new Error('Could not get a valid response from the API.');
+                    }
+                } catch (error) {
+                    console.error('Gemini API Error:', error);
+                    resultContainer.textContent = `Generation failed. Please try again later. Error: ${error.message}`;
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    resultContainer.classList.remove('hidden');
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = 'Generate Script Outline';
+                }
+            }
+
+            generateBtn.addEventListener('click', generateScript);
+            promptInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    generateScript();
+                }
+            });
+
+
+            // Initial load
+            updateRegionContent('na');
+
+        });
+    </script>
+</body>
+</html>

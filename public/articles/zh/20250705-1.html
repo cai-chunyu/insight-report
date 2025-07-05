@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球短剧市场交互式分析仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Subtle Accents -->
+    <!-- Application Structure Plan: 我设计了一个自上而下的叙事型仪表盘结构，而非报告的线性章节。用户首先通过一个引人注目的“概览”部分（包含关键指标和市场增长图）快速了解市场全貌。接着，通过“全球版图”深入探索不同区域的差异。然后，“商业揭秘”部分以可视化的方式拆解了价值链和ROI模型，将复杂的商业逻辑简单化。之后，“案例深度”通过对比分析提供了具象的成功与失败经验。最后，“AI与未来”部分以路线图的形式展望未来，并加入了一个由Gemini API驱动的互动剧本生成器，将理论与实践相结合。这种从宏观到微观，再到未来的结构，符合人类认知和探索的自然流程，让用户可以根据自己的兴趣深度钻研，极大地提升了信息的可消费性和可用性。 -->
+    <!-- Visualization & Content Choices: 
+        - 市场规模: (目标: 展示变化趋势) -> Chart.js 交互式折线图。理由: 直观呈现市场从2021到2027年的爆炸式增长和未来预测，用户悬停可查看具体数据，互动性强。
+        - 成本构成: (目标: 揭示比例关系) -> Chart.js 环形图。理由: 清晰地展示“投流”成本在总成本中的压倒性占比，这是短剧商业模式的核心洞察。
+        - 价值链: (目标: 组织流程信息) -> HTML/CSS Flexbox 流程图。理由: 使用轻量化的HTML和图标（Unicode）而非图片或SVG，创建了一个清晰、响应式的流程图，展示从IP到变现的全链路。
+        - 区域对比: (目标: 对比分析) -> HTML/CSS 交互式卡片+选项卡。理由: 用户通过点击不同区域的按钮，可以切换显示对应市场的用户画像、热门题材和变现模式，这种交互比静态表格更具探索性。
+        - 案例分析: (目标: 对比组织) -> HTML/CSS 网格布局卡片。理由: 将四个案例并列展示，便于用户进行横向对比，快速把握不同市场的成功关键和失败教训。
+        - AI策略: (目标: 展示步骤) -> HTML/CSS 时间线/步骤组件。理由: 将AI平台的GTM策略以分阶段的视觉形式呈现，逻辑清晰，易于理解。
+        - AI剧本生成: (目标: 演示AI能力) -> Gemini API 交互模块。理由: 直接展示AI生成剧本大纲的能力，将报告中的未来展望转化为可操作的体验，极具说服力。
+        - Library/Method: Chart.js (Canvas), Tailwind CSS, Vanilla JS, Gemini API。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fdfcfb;
+            color: #3f3c3a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #fbeee4;
+            color: #c55a11;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .tab-btn.active {
+            background-color: #c55a11;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .tab-btn {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #c55a11;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-50 shadow-md bg-white/80 backdrop-blur-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">短剧市场洞察</h1>
+                </div>
+                <div class="hidden md:flex md:items-center md:space-x-2 lg:space-x-4">
+                    <a href="#overview" class="nav-link">市场概览</a>
+                    <a href="#global" class="nav-link">全球版图</a>
+                    <a href="#business" class="nav-link">商业揭秘</a>
+                    <a href="#cases" class="nav-link">案例深度</a>
+                    <a href="#future" class="nav-link">AI与未来</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Section 1: Market Overview -->
+        <section id="overview" class="mb-16 md:mb-24 text-center scroll-mt-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">一夜崛起的新范式</h2>
+            <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600 mb-10">
+                本节旨在提供对短剧市场的宏观认知，通过核心数据和增长趋势，直观展示这一新兴领域的惊人爆发力。您将看到中国市场的规模演变，这是理解整个行业的基础。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-amber-600">373.9亿</h3>
+                    <p class="mt-2 text-gray-500">2023年中国市场规模(元)</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-amber-600">267.7%</h3>
+                    <p class="mt-2 text-gray-500">2023年市场同比增长</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-amber-600">> 电影票房</h3>
+                    <p class="mt-2 text-gray-500">2023年市场规模首次超越</p>
+                </div>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-xl">
+                 <h3 class="text-xl font-semibold mb-4 text-left">中国微短剧市场规模与预测 (2021-2027E)</h3>
+                <div class="chart-container">
+                    <canvas id="marketSizeChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Global Landscape -->
+        <section id="global" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">全球化征程：差异化的竞技场</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    全球市场并非铁板一块。本节通过交互式卡片，让您清晰地对比各大战略区域在用户、内容和变现模式上的核心差异。点击下方按钮，探索不同市场的独特生态。
+                </p>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-xl">
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200 active" data-region="na">北美</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200" data-region="sea">东南亚</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200" data-region="jpkr">日韩</button>
+                    <button class="tab-btn px-4 py-2 rounded-full font-medium text-gray-700 bg-gray-200" data-region="other">新兴市场</button>
+                </div>
+                <div id="region-content" class="fade-in">
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Business Uncovered -->
+        <section id="business" class="mb-16 md:mb-24 scroll-mt-20">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">商业揭秘：一场“投流”的游戏</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    短剧的本质是效果营销。本节将为您拆解其独特的价值链和成本结构。通过流程图和环形图，您将理解为何“投流”成本是这门生意的核心，以及利润空间如何被挤压。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-xl">
+                     <h3 class="text-xl font-semibold mb-6 text-center">短剧价值链全景</h3>
+                     <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-orange-100 text-orange-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">💡</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">IP 源头</h4>
+                                <p class="text-sm text-gray-600">改编成熟网文，降低内容风险</p>
+                            </div>
+                        </div>
+                        <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                        <div class="flex items-center">
+                           <div class="flex-shrink-0 bg-sky-100 text-sky-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">🎬</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">制作</h4>
+                                <p class="text-sm text-gray-600">3个月内完成，追求“短平快”</p>
+                            </div>
+                        </div>
+                        <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                        <div class="flex items-center">
+                             <div class="flex-shrink-0 bg-red-100 text-red-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">🚀</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-red-700">投流 (核心)</h4>
+                                <p class="text-sm text-gray-600">效果广告投放，决定成败的关键</p>
+                            </div>
+                        </div>
+                         <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                        <div class="flex items-center">
+                           <div class="flex-shrink-0 bg-indigo-100 text-indigo-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">📱</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">平台</h4>
+                                <p class="text-sm text-gray-600">小程序(国内) / App(海外)</p>
+                            </div>
+                        </div>
+                         <div class="h-8 flex justify-center"><div class="border-l-2 border-dashed border-gray-300"></div></div>
+                         <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 text-green-600 rounded-full h-12 w-12 flex items-center justify-center text-2xl">💰</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold">变现</h4>
+                                <p class="text-sm text-gray-600">付费解锁(IAP) / 广告(IAA) / 品牌植入</p>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-xl flex flex-col justify-center">
+                    <h3 class="text-xl font-semibold mb-4 text-center">典型短剧成本结构</h3>
+                    <div class="chart-container w-full max-w-sm mx-auto h-64 md:h-80">
+                         <canvas id="costStructureChart"></canvas>
+                    </div>
+                     <p class="text-center text-sm text-gray-500 mt-4">投流成本占据了80-90%，这精准地指出了行业的核心痛点和AI技术最有价值的切入点。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Case Studies -->
+        <section id="cases" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">案例深度：成功与失败的蓝图</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    理论结合实践，本节通过剖析四个标志性案例，揭示驱动成功的底层逻辑和导致失败的战略误判。这部分内容将帮助您理解不同市场环境下，策略选择的差异与影响。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Case 1: ReelShort -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">ReelShort (海外)</h4>
+                    <p class="text-sm text-green-600 font-semibold mb-3">✅ 冲动消费模式的胜利</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                        <li><span class="font-bold text-green-700">内容引擎:</span> 复用狼人、亿万富翁等网文爆款题材。</li>
+                        <li><span class="font-bold text-green-700">营销引擎:</span> “产品即广告”，用最爽的片段引流。</li>
+                        <li><span class="font-bold text-green-700">变现引擎:</span> 按集付费的微交易，降低付费门槛。</li>
+                    </ul>
+                </div>
+                <!-- Case 2: Quibi -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">Quibi (海外)</h4>
+                    <p class="text-sm text-red-600 font-semibold mb-3">❌ 战略错配的完美反例</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                       <li><span class="font-bold text-red-700">内容错配:</span> 提供需沉浸思考的“精品”，而非即时爽点。</li>
+                       <li><span class="font-bold text-red-700">定价错配:</span> 高摩擦的订阅模式，无法与免费内容竞争。</li>
+                       <li><span class="font-bold text-red-700">场景错配:</span> 主打的通勤场景因疫情消失。</li>
+                    </ul>
+                </div>
+                <!-- Case 3: 后妈 -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">《我在八零年代当后妈》</h4>
+                    <p class="text-sm text-green-600 font-semibold mb-3">✅ “投流为王”的巅峰之作</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                        <li><span class="font-bold text-green-700">精准选材:</span> 抓住“年代”、“爽文逆袭”等共鸣元素。</li>
+                        <li><span class="font-bold text-green-700">资本驱动:</span> 投入巨额预算饱和式投放，追求正向ROI。</li>
+                        <li><span class="font-bold text-green-700">模式验证:</span> 证明了投流能力是国内爆款的首要因素。</li>
+                    </ul>
+                </div>
+                <!-- Case 4: 完蛋！ -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col">
+                    <h4 class="font-bold text-lg mb-2">《完蛋！我被美女包围了！》</h4>
+                    <p class="text-sm text-blue-600 font-semibold mb-3">💡 互动玩法的革新者</p>
+                    <ul class="space-y-2 text-sm text-gray-600 flex-grow">
+                         <li><span class="font-bold text-blue-700">模式创新:</span> “短剧+游戏”，真人影像互动体验。</li>
+                         <li><span class="font-bold text-blue-700">渠道突破:</span> 绕开投流内卷，在Steam平台买断制发售。</li>
+                         <li><span class="font-bold text-blue-700">价值提升:</span> 深度参与感提升单用户价值，支撑新模式。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: AI & Future -->
+        <section id="future" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">AI 革命：重塑内容生产的未来</h2>
+                <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                    基于对市场的深刻理解，我们展望未来，AI将成为不可或缺的核心工具。本节为您呈现AI赋能创作平台的战略路线图，并提供一个由Gemini驱动的互动体验，让您亲身感受AI生成剧本的魅力。
+                </p>
+            </div>
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl mb-8">
+                <h3 class="text-xl font-semibold mb-6 text-center">AI赋能平台战略路线图</h3>
+                <div class="relative border-l-2 border-dashed border-orange-300 ml-4 md:ml-0 md:border-l-0 md:border-t-2 md:flex">
+                    <!-- Phase 1 -->
+                    <div class="mb-8 md:mb-0 md:w-1/3 relative flex md:block">
+                        <div class="absolute -left-5 md:left-auto md:-top-5 md:right-1/2 md:translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                        <div class="pl-8 md:pl-0 md:pt-10 md:px-4 text-center">
+                            <h4 class="font-bold text-lg mb-2">滩头阵地：AI剧本生成</h4>
+                             <p class="text-sm text-gray-600">定位为“ROI优化引擎”，通过解构爆款，为特定市场精准生成高转化潜力的剧本，从源头解决投流成本黑洞。</p>
+                        </div>
+                    </div>
+                     <!-- Phase 2 -->
+                    <div class="mb-8 md:mb-0 md:w-1/3 relative flex md:block">
+                         <div class="absolute -left-5 md:left-auto md:-top-5 md:right-1/2 md:translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                        <div class="pl-8 md:pl-0 md:pt-10 md:px-4 text-center">
+                            <h4 class="font-bold text-lg mb-2">渗透整合：混合制作流程</h4>
+                             <p class="text-sm text-gray-600">推出AI辅助工具集（如分镜、虚拟场景），并将AI生成内容无缝整合进实拍流程，在不触及技术瓶颈下，有效降低制作成本。</p>
+                        </div>
+                    </div>
+                     <!-- Phase 3 -->
+                    <div class="md:w-1/3 relative flex md:block">
+                         <div class="absolute -left-5 md:left-auto md:-top-5 md:right-1/2 md:translate-x-1/2 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                        <div class="pl-8 md:pl-0 md:pt-10 md:px-4 text-center">
+                            <h4 class="font-bold text-lg mb-2">终极目标：端到端AI制片</h4>
+                             <p class="text-sm text-gray-600">在底层模型解决“一致性”难题后，整合提供“剧本-分镜-视频”的全自动生成方案，实现真正的工业化革命。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gemini API Feature -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+                <h3 class="text-xl font-semibold mb-2 text-center">✨ AI 剧本大纲生成器</h3>
+                <p class="text-center text-sm text-gray-500 mb-6">由 Google Gemini 驱动</p>
+                <div class="max-w-2xl mx-auto">
+                    <div class="mb-4">
+                        <label for="prompt-input" class="block text-sm font-medium text-gray-700 mb-1">输入您的创意（例如：一个程序员穿越到古代成为大侠）</label>
+                        <input type="text" id="prompt-input" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" placeholder="一个关于时间和背叛的科幻故事...">
+                    </div>
+                    <button id="generate-btn" class="w-full bg-orange-600 text-white font-bold py-2 px-4 rounded-md hover:bg-orange-700 transition duration-300 flex items-center justify-center">
+                        生成剧本大纲
+                    </button>
+                    <div id="loading-indicator" class="hidden mt-6 flex justify-center">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="result-container" class="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200 whitespace-pre-wrap font-mono text-sm hidden"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-16 bg-gray-800 text-white text-center py-4">
+        <p class="text-sm">&copy; 2025 全球短剧市场交互式分析. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const marketData = {
+                labels: ['2021', '2022', '2023', '2024E', '2025E', '2027E'],
+                data: [3.98, 27.75, 373.9, 505, 634.3, 928] // Simplified average for 2027
+            };
+
+            const costData = {
+                labels: ['投流成本 (85%)', '制作成本 (10%)', '剧本成本 (3%)', '平台及其他 (2%)'],
+                data: [85, 10, 3, 2]
+            };
+            
+            const regionData = {
+                na: {
+                    title: '北美: 高ARPU值的利润核心',
+                    details: [
+                        { label: '市场地位', value: '无可争议的收入之王，贡献60-70%海外总收入。' },
+                        { label: '用户画像', value: '35岁+女性为主，高学历、高可支配收入。' },
+                        { label: '热门题材', value: '狼人、吸血鬼、隐秘亿万富翁、契约婚姻。' },
+                        { label: '变现模式', value: 'IAP (应用内购买) 为主，用户付费意愿强。' }
+                    ]
+                },
+                sea: {
+                    title: '东南亚: 高用户体量的增长前沿',
+                    details: [
+                        { label: '市场地位', value: '用户增长的主要引擎，下载量巨大。' },
+                        { label: '用户画像', value: '年轻用户，移动优先，文化亲近感强。' },
+                        { label: '热门题材', value: '都市言情、家庭纷争、逆袭等本土化内容。' },
+                        { label: '变现模式', value: 'IAA+IAP混合模式，适应价格敏感市场。' }
+                    ]
+                },
+                jpkr: {
+                    title: '日韩: 注重品质的潜力市场',
+                    details: [
+                        { label: '市场地位', value: '快速成长的潜力股，贡献收入近20%。' },
+                        { label: '用户画像', value: '对内容品质要求高，审美标准严格。' },
+                        { label: '热门题材', value: '精良制作、符合本土审美的定制内容。' },
+                        { label: '变现模式', value: 'IAP为主，高品质内容可支撑付费。' }
+                    ]
+                },
+                other: {
+                    title: '拉美与中东: 下一波机遇浪潮',
+                    details: [
+                        { label: '市场地位', value: '被普遍视为下一个蓝海，下载量增长突出。' },
+                        { label: '用户画像', value: '多样化，需要深度本地化洞察。' },
+                        { label: '热门题材', value: '独特的本地化偏好，如巴西的帮派、战争题材。' },
+                        { label: '变现模式', value: 'IAA+IAP混合模式，探索期。' }
+                    ]
+                }
+            };
+            
+            // Chart.js: Market Size Chart
+            const ctxMarket = document.getElementById('marketSizeChart').getContext('2d');
+            new Chart(ctxMarket, {
+                type: 'line',
+                data: {
+                    labels: marketData.labels,
+                    datasets: [{
+                        label: '市场规模 (亿元)',
+                        data: marketData.data,
+                        borderColor: '#c55a11',
+                        backgroundColor: 'rgba(197, 90, 17, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#c55a11',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#c55a11',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '规模 (亿元人民币)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.parsed.y} 亿元`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart.js: Cost Structure Chart
+            const ctxCost = document.getElementById('costStructureChart').getContext('2d');
+            new Chart(ctxCost, {
+                type: 'doughnut',
+                data: {
+                    labels: costData.labels,
+                    datasets: [{
+                        label: '成本构成',
+                        data: costData.data,
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Region tabs functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const regionContentDiv = document.getElementById('region-content');
+
+            function updateRegionContent(region) {
+                const data = regionData[region];
+                let contentHTML = `
+                    <div class="p-4 md:p-6 bg-amber-50 rounded-lg">
+                        <h3 class="font-bold text-xl mb-4 text-gray-800">${data.title}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                `;
+                data.details.forEach(item => {
+                    contentHTML += `
+                        <div class="bg-white/50 p-4 rounded-md">
+                            <p class="font-semibold text-amber-700">${item.label}</p>
+                            <p class="text-sm text-gray-600">${item.value}</p>
+                        </div>
+                    `;
+                });
+                contentHTML += '</div></div>';
+                regionContentDiv.innerHTML = contentHTML;
+                regionContentDiv.classList.remove('fade-in');
+                void regionContentDiv.offsetWidth;
+                regionContentDiv.classList.add('fade-in');
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateRegionContent(button.dataset.region);
+                });
+            });
+
+            // Smooth scrolling for nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Active nav link on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            // Gemini API functionality
+            const generateBtn = document.getElementById('generate-btn');
+            const promptInput = document.getElementById('prompt-input');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const resultContainer = document.getElementById('result-container');
+
+            async function generateScript() {
+                const userPrompt = promptInput.value;
+                if (!userPrompt) {
+                    resultContainer.textContent = '请输入您的创意或主题。';
+                    resultContainer.classList.remove('hidden');
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                resultContainer.classList.add('hidden');
+                generateBtn.disabled = true;
+                generateBtn.textContent = '正在生成中...';
+
+                const fullPrompt = `请根据以下主题，为一部三分钟时长的竖屏短剧，生成一个结构化剧本大纲。大纲需要包含：\n1. 剧名\n2. 一句话简介\n3. 主要人物设定 (2-3个)\n4. 场景设置\n5. 关键情节 (起、承、转、合)\n6. 核心反转或高潮\n\n主题：${userPrompt}`;
+
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: fullPrompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API 请求失败，状态码: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        resultContainer.textContent = text;
+                    } else {
+                        throw new Error('未能从API获取有效内容。');
+                    }
+                } catch (error) {
+                    console.error('Gemini API Error:', error);
+                    resultContainer.textContent = `生成失败，请稍后重试。错误信息: ${error.message}`;
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    resultContainer.classList.remove('hidden');
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = '生成剧本大纲';
+                }
+            }
+
+            generateBtn.addEventListener('click', generateScript);
+            promptInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    generateScript();
+                }
+            });
+
+
+            // Initial load
+            updateRegionContent('na');
+
+        });
+    </script>
+</body>
+</html>

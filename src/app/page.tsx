@@ -13,6 +13,12 @@ type Article = {
 const articlesData = {
   en: [
     {
+      id: '20250705-1',
+      title: 'Global Short-form Drama Market Interactive Dashboard',
+      date: '2025-01-05',
+      path: '/articles/en/20250705-1'
+    },
+    {
       id: 'about',
       title: 'About InsightReport',
       date: '2025-01-05',
@@ -20,6 +26,12 @@ const articlesData = {
     }
   ],
   zh: [
+    {
+      id: '20250705-1',
+      title: '全球短剧市场交互式分析仪表盘',
+      date: '2025-01-05',
+      path: '/articles/zh/20250705-1'
+    },
     {
       id: 'about',
       title: '关于 InsightReport',
